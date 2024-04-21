@@ -22,3 +22,6 @@ venv/
 # Editor/OS specific files
 *.swp
 .DS_Store
+
+# Environment variables
+.env

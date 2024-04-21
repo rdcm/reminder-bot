@@ -1,5 +1,5 @@
 activate:
-	python3 -m venv venv && echo 'activate manually: source venv/bin/activate'
+	python3 -m venv venv && echo 'activate manually: source venv/bin/activate && source .env'
 
 install:
 	pip install poetry && poetry install
