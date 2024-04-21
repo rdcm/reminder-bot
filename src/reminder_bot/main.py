@@ -1,6 +1,8 @@
 """Telegram reminder bot."""
 
 import os
+import asyncio
+
 from telegram import ForceReply, Update
 from telegram.ext import (
     Application,
@@ -30,7 +32,7 @@ async def on_fallback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(update.message.text)
 
 
-def main() -> None:
+async def main() -> None:
     """Start the bot."""
 
     token = os.getenv("BOT_TOKEN")
@@ -52,4 +54,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
