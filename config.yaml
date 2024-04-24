@@ -1,0 +1,4 @@
+tasks:
+  - name: "first"
+    cron: "* * * * *"
+    text: "reminder text"

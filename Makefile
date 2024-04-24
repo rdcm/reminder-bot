@@ -11,7 +11,7 @@ lint:
 	pylint -rn ./src/**/*.py
 
 run:
-	python3 src/reminder_bot/main.py
+	python src/reminder_bot/main.py
 
 docker-build:
 	docker build --no-cache -t reminder_bot .

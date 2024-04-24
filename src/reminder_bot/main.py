@@ -1,15 +1,26 @@
 """Telegram reminder bot."""
 
 import os
+from dataclasses import dataclass
+import yaml
+from apscheduler.triggers.cron import CronTrigger
 
 from telegram import ForceReply, Update
 from telegram.ext import (
     Application,
+    CallbackContext,
     CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
 )
+
+
+@dataclass
+class AppConfig:
+    """Application config"""
+
+    tasks: list
 
 
 async def on_start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -31,24 +42,49 @@ async def on_fallback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(update.message.text)
 
 
+async def notify_job(context: CallbackContext, chat_id, text):
+    """Sends a notification to a chat."""
+    await context.bot.send_message(chat_id=chat_id, text=text)
+
+
+def load_config(config_file):
+    """Load application configuration."""
+    with open(config_file, mode="r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    return map_config_to_model(config)
+
+
+def map_config_to_model(config):
+    """Map configuration to dataclass."""
+    return AppConfig(tasks=config.get("tasks", []))
+
+
 def main() -> None:
     """Start the bot."""
 
-    token = os.getenv("BOT_TOKEN")
+    config = load_config("config.yaml")
 
-    # Create the Application and pass it your bot's token.
+    token = os.getenv("BOT_TOKEN")
+    chat_id = os.getenv("CHAT_ID")
+
     application = Application.builder().token(token).build()
 
-    # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", on_start))
     application.add_handler(CommandHandler("help", on_help))
 
-    # on non command i.e message - echo the message on Telegram
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_fallback)
     )
 
-    # Run the bot until the user presses Ctrl-C
+    for task in config.tasks:
+        application.job_queue.run_custom(
+            lambda ctx, task=task: notify_job(ctx, chat_id, task.get("text")),
+            job_kwargs={
+                "trigger": CronTrigger.from_crontab(task.get("cron")),
+            },
+        )
+
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
