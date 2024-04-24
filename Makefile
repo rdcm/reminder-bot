@@ -17,7 +17,12 @@ docker-build:
 	docker build --no-cache -t reminder_bot .
 
 docker-run:
-	docker run -e BOT_TOKEN=$(BOT_TOKEN) -e PYTHONUNBUFFERED=TRUE -d reminder_bot
+	docker run -e BOT_TOKEN=$(BOT_TOKEN) -e CHAT_ID=$(CHAT_ID) -e PYTHONUNBUFFERED=TRUE --name reminder_bot -d reminder_bot
 
 deactivate:
 	echo 'deactivate manually: deactivate'
+
+down:
+	docker stop reminder_bot
+	docker rm reminder_bot
+	docker rmi reminder_bot

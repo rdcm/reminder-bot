@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import yaml
 from apscheduler.triggers.cron import CronTrigger
 
-from telegram import ForceReply, Update
+from telegram import Update
 from telegram.ext import (
     Application,
     CallbackContext,
@@ -23,18 +23,21 @@ class AppConfig:
     tasks: list
 
 
-async def on_start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
-    )
+async def on_list(
+    update: Update, _: ContextTypes.DEFAULT_TYPE, config: AppConfig, chat_id: int
+) -> None:
+    """Send a message when the command /list is issued."""
+    if not chat_id_guard(update.message.chat_id, chat_id):
+        return
 
+    message = "List of tasks:\n\n"
+    for task in config.tasks:
+        name = task.get("name")
+        cron = task.get("cron")
+        text = task.get("text")
+        message += f"Name: {name}\nCron: {cron}\nText: {text}\n\n"
 
-async def on_help(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    await update.message.reply_text(message)
 
 
 async def on_fallback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -60,9 +63,15 @@ def map_config_to_model(config):
     return AppConfig(tasks=config.get("tasks", []))
 
 
+def chat_id_guard(caller: int, me: int):
+    """Guard function."""
+    return caller == me
+
+
 def main() -> None:
     """Start the bot."""
 
+    os.chdir("src/reminder_bot")
     config = load_config("config.yaml")
 
     token = os.getenv("BOT_TOKEN")
@@ -70,8 +79,11 @@ def main() -> None:
 
     application = Application.builder().token(token).build()
 
-    application.add_handler(CommandHandler("start", on_start))
-    application.add_handler(CommandHandler("help", on_help))
+    application.add_handler(
+        CommandHandler(
+            "list", lambda update, ctx: on_list(update, ctx, config, int(chat_id))
+        )
+    )
 
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, on_fallback)
@@ -79,7 +91,7 @@ def main() -> None:
 
     for task in config.tasks:
         application.job_queue.run_custom(
-            lambda ctx, task=task: notify_job(ctx, chat_id, task.get("text")),
+            lambda ctx, task=task: notify_job(ctx, int(chat_id), task.get("text")),
             job_kwargs={
                 "trigger": CronTrigger.from_crontab(task.get("cron")),
             },
