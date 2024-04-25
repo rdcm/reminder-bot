@@ -25,6 +25,7 @@ CHAT_ID=<Your chat id>
 
 `config.yaml`:
 ```
+timezone: "Europe/Amsterdam"
 tasks:
   - name: "my first task"
     cron: "* * * * *"
