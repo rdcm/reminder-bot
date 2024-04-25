@@ -1,3 +1,4 @@
+timezone: "Europe/Amsterdam"
 tasks:
   - name: "first"
     cron: "* * * * *"

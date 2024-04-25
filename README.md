@@ -5,7 +5,11 @@ Simple reminder bot for telegram.
 ## Features
 
 - cron support
-- reminder configuration from `config.yaml`
+- timezone support
+- setting up a task list from the `config.yaml`
+
+## Commands
+
 - `/list` getting list of tasks 
 
 ## Configuration
@@ -14,6 +18,7 @@ Simple reminder bot for telegram.
 ```
 # Get from @BotFather
 BOT_TOKEN=<Your API token from @BotFather>
+
 # https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 CHAT_ID=<Your chat id>
 ```
@@ -23,7 +28,7 @@ CHAT_ID=<Your chat id>
 tasks:
   - name: "my first task"
     cron: "* * * * *"
-    text: "reminder text"
+    text: "task text"
 ```
 
 ## Up & Running

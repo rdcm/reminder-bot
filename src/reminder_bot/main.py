@@ -20,6 +20,7 @@ from telegram.ext import (
 class AppConfig:
     """Application config"""
 
+    timezone: str
     tasks: list
 
 
@@ -60,7 +61,7 @@ def load_config(config_file):
 
 def map_config_to_model(config):
     """Map configuration to dataclass."""
-    return AppConfig(tasks=config.get("tasks", []))
+    return AppConfig(timezone=config.get("timezone"), tasks=config.get("tasks", []))
 
 
 def chat_id_guard(caller: int, me: int):
@@ -93,7 +94,9 @@ def main() -> None:
         application.job_queue.run_custom(
             lambda ctx, task=task: notify_job(ctx, int(chat_id), task.get("text")),
             job_kwargs={
-                "trigger": CronTrigger.from_crontab(task.get("cron")),
+                "trigger": CronTrigger.from_crontab(
+                    expr=task.get("cron"), timezone=config.timezone
+                ),
             },
         )
 
